@@ -1,0 +1,26 @@
+name: "Gitlab Python Publish Action"
+description: Github action to build and publish Python packages to Gitlab
+inputs:
+  gitlab-token-user:
+    description: User for the Gitlab token
+    required: true
+  gitlab-token:
+    description: Gitlab Token
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/setup-python@v2
+      with:
+        python-version: "3.9"
+    - uses: actions/checkout@v2
+    - name: Publish
+      shell: bash
+      run: |
+        export POETRY_VERSION=1.1.13
+        curl -sSL https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py | python3 -
+        poetry config repositories.source-python-packages https://gitlab.com/api/v4/projects/26335502/packages/pypi
+        poetry config http-basic.source-python-packages ${{ inputs.gitlab-token-user }} ${{ inputs.gitlab-token }}
+        poetry build
+        poetry publish -r source-python-packages
